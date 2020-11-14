@@ -1,0 +1,104 @@
+* {
+    font-family: "Meiryo";
+    font-size: 12px;
+}
+
+body, html {
+    margin: 0;
+    overflow: hidden;
+}
+
+html {
+    height: 100%;
+    background-color: transparent;
+    /*background-color: rgba(255, 0, 0, 0.2);*/
+}
+
+.resizeHandle {
+    background-color: red;
+    background-image: url(../img/handle.png);
+    background-position: bottom right;
+    background-repeat: no-repeat;
+    box-sizing: border-box;
+}
+
+.header {
+    background-color: blue;
+    color: white;
+    font-size: 20px;
+    padding: 3px;
+}
+
+#canvasWrapper {
+    background-color: transparent;
+    width: 100%;
+}
+
+#canvas {
+    background-color: transparent;
+}
+
+.footer {
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    padding: 5px;
+    font: 20px monospace;
+}
+
+.full {
+    width: 100%;
+    height: 100%;
+  }
+
+  .full2 {
+    width: 100%;
+    height: 40px;
+  }
+  .full3 {
+    width: 100%;
+    height: 20px;
+  }
+  .v-btn-toggle .v-btn.full2 {
+    width: 100%;
+    height: 100%;
+    text-overflow: clip;
+    padding: 0px
+  }
+  
+  #app {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.ffcolor-red {
+    background-color: #f44336;
+    color: white !important;
+    filter: brightness(50%);
+}
+.ffcolor-grey {
+    background-color: #607d8b;
+    color: white !important;
+    filter: brightness(50%);
+}
+.ffcolor-yellow {
+    background-color: #f7e337; 
+    color: rgb(0, 0, 100) !important;
+    filter: brightness(50%);
+}
+.ffcolor-blue {
+    background-color: #2196f3;
+    color: white !important;
+    filter: brightness(50%);
+}
+.ffcolor-green {
+    background-color: #8bc34a;
+    color: white !important;
+    filter: brightness(50%);
+}
+.ffcolor-purple {
+    background-color: #9c27b0;
+    color: white !important;
+    filter: brightness(50%);
+}
+.v-btn--active {
+    filter: brightness(100%);
+}

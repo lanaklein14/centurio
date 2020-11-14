@@ -1,0 +1,80 @@
+{
+  "ShB": {
+    "name": "漆黒エリア",
+    "name_du": "ShB Region",
+    "class": "grey darken-2 white--text",
+    "zoneIds": [
+      2953,
+      2954,
+      2955,
+      2956,
+      2957,
+      2958
+    ]
+  },
+  "SB": {
+    "name": "紅蓮エリア",
+    "class": "red darken-2 white--text",
+    "zoneIds": [
+      2406,
+      2407,
+      2408,
+      2409,
+      2410,
+      2411
+    ]
+  },
+  "HW": {
+    "name": "蒼天エリア",
+    "class": "indigo darken-2 white--text",
+    "zoneIds": [
+      2200,
+      2100,
+      2002,
+      2000,
+      2001,
+      2101
+    ]
+  },
+  "LaNoscea": {
+    "name": "ラノシア",
+    "class": "red lighten-2 black--text",
+    "zoneIds": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      350
+    ]
+  },
+  "Gridania": {
+    "name": "グリダニア",
+    "class": "yellow lighten-2 black--text",
+    "zoneIds": [
+      54,
+      55,
+      56,
+      57
+    ]
+  },
+  "Thanalan": {
+    "name": "ザナラーン",
+    "class": "brown lighten-2 black--text",
+    "zoneIds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ]
+  },
+  "Frontier": {
+    "name": "辺境エリア",
+    "class": "brown lighten-4 black--text",
+    "zoneIds": [
+      67,
+      63
+    ]
+  }
+}

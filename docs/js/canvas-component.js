@@ -147,21 +147,13 @@ Vue.component('canvas-component', {
           const scalec2a = this.canvas.width / (this.zone.scale.xmax - this.zone.scale.xmin)
           const scalea2i = (this.zone.scale.xmax - this.zone.scale.xmin) / this.image.width;
           ctx.scale(scalec2a, scalec2a)
-          //ctx.translate(1.0-this.self.x, 1.0-this.self.y)
-
-          //modosu
-          //ctx.translate((this.self.x-1)/this.scale, (this.self.y-1)/this.scale)
 
           //mid
           const width = (this.zone.scale.xmax - this.zone.scale.xmin)
           const height = (this.zone.scale.ymax - this.zone.scale.ymin)
           const midX = width / 2.0
           const midY = height / 2.0
-          const offsetX = (midX - this.self.x)
-          const offsetY = (midY - this.self.y)
 
-          //ctx.translate(midX, midY)
-          //ctx.translate(-this.self.x, -this.self.y)
           ctx.scale(this.scale, this.scale)
           //ctx.translate(-midX, -midY)
           ctx.translate(1.0 - this.self.x, 1.0 - this.self.y)
@@ -189,66 +181,90 @@ Vue.component('canvas-component', {
           ctx.translate(-this.zone.scale.xmin, -this.zone.scale.ymin)
 
           //索敵範囲
-          ctx.fillStyle = "rgba(0, 0, 255, 0.15)";
+          ctx.fillStyle = "rgba(0, 0, 255, 0.25)";
           ctx.fillRect(this.self.x - 2.2, this.self.y - 2.2, 4.4, 4.4);
 
-          this.drawMobPos(ctx)
-          this.drawRebellion(ctx)
+          this.drawMobPos(ctx, scalec2a)
+          this.drawRebellion(ctx, scalec2a)
 
 
           this.mobs.forEach(m => {
-            ctx.beginPath();
-            ctx.fillStyle = "rgba(255, 0, 0, 1.0)";
-            if (this.zone.mobs.find(item => { return item.id == m.id }) != null) {
+            ctx.save()
+            if (this.zone.mobs.find(item => { return item.id == m.id }) != null || 
+                (this.zone.type == 2 && this.zone.mobs2.find(item => { return item.id == m.id }) != null)) {
               ctx.fillStyle = "rgba(0, 0, 255, 1.0)";
+              ctx.beginPath()
+              ctx.translate(m.x, m.y)
+              ctx.arc(0, 0, 2/scalec2a, 0, Math.PI * 2, 0);
+              ctx.fill();
+              ctx.closePath();
             }
-            ctx.arc(m.x, m.y, 0.1 + this.scale / 200, 0, Math.PI * 2, 0);
-            ctx.fill();
-            ctx.closePath();
+            else {
+              ctx.fillStyle = "rgba(255, 0, 0, 1.0)";
+              if (this.scale > 2.0) {
+                ctx.beginPath()
+                ctx.translate(m.x, m.y)
+                ctx.arc(0, 0, 2/3/scalec2a, 0, Math.PI * 2, 0);
+                ctx.fill();
+                ctx.closePath();
+              }
+            }
+            ctx.restore()
           })
 
+          ctx.save()
+          ctx.translate(this.self.x, this.self.y)
+          ctx.rotate(Math.PI-this.self.heading)
+
           ctx.beginPath();
-          ctx.fillStyle = "rgba(192, 255, 0, 1.0)";
-          ctx.arc(this.self.x, this.self.y, 0.2 + this.scale / 100, 0, Math.PI * 2, 0);
+          ctx.fillStyle = "rgba(192, 255, 192, 0.3)";
+          ctx.arc(0, 0, 15/scalec2a, Math.PI + 0.8, -0.8)
+          ctx.lineTo(0, 0);
           ctx.fill();
           ctx.closePath();
 
-          ctx.beginPath();
-          ctx.fillStyle = "rgba(192, 255, 0, 0.5)";
-          ctx.arc(this.self.x, this.self.y, 0.6 + this.scale / 100, 1.1 - this.self.heading, Math.PI - 1.1 - this.self.heading);
-          ctx.lineTo(this.self.x, this.self.y);
+          ctx.beginPath()
+          ctx.fillStyle = "rgba(150, 150, 255, 1.0)";
+          ctx.strokeStyle = `#000000ff`;
+          ctx.lineWidth = 0.5/(this.scale*scalec2a)
+          ctx.arc(0, 0, 8/(this.scale*scalec2a), 0, Math.PI, 0)
+          ctx.lineTo(0, -15/(this.scale*scalec2a))
+          ctx.lineTo(8/(this.scale*scalec2a), 0)
           ctx.fill();
+          ctx.stroke();
           ctx.closePath();
+          ctx.beginPath()
+          ctx.arc(0, 0, 2/(this.scale*scalec2a), 0, 2*Math.PI, 0)
+          ctx.stroke();
+          ctx.closePath();
+          ctx.restore()
 
           ctx.restore();
         }
         ctx.restore();
 
-        ctx.save();
-        //                ctx.translate(canvas.width / 2, canvas.height / 2);
-        //                ctx.scale(scale, scale);
-
-        ctx.restore();
+        this.drawCopyRight(ctx)
       }
     },
 
-    drawMobPos(ctx) {
+    drawMobPos(ctx, scale) {
       this.zone.mobLocations.forEach(loc => {
         ctx.save();
         ctx.translate(loc.x, loc.y);
-        let radius = 0.6
-        var arcs = [];
+        const radius = 0.5
+        const arcs = [];
+        const opacity = this.scale > 2.0 ? '77' : 'ff'
         if (this.zone.type === 0) {
-          if (loc.flags[0] && this.display.S != undefined) { arcs.push({ fillStyle: "#f44336ff" }); }
-          if (loc.flags[1] && this.display.A != undefined) { arcs.push({ fillStyle: "#ffeb3bff" }); }
-          if (loc.flags[2] && this.display.B != undefined) { arcs.push({ fillStyle: "#2196f3ff" }); }
+          if (loc.flags[0] && this.display.S != undefined) { arcs.push({ fillStyle: `#f44336${opacity}` }); }
+          if (loc.flags[1] && this.display.A != undefined) { arcs.push({ fillStyle: `#ffeb3b${opacity}` }); }
+          if (loc.flags[2] && this.display.B != undefined) { arcs.push({ fillStyle: `#2196f3${opacity}` }); }
         }
         else { //type === 1
-          if (loc.flags[0] && this.display.S != undefined) { arcs.push({ fillStyle: "#f44336ff" }); }
-          if (loc.flags[1] && this.display.A != undefined) { arcs.push({ fillStyle: "#ffeb3bff" }); }
-          if (loc.flags[2] && this.display.A2 != undefined) { arcs.push({ fillStyle: "#8bc34aff" }); }
-          if (loc.flags[3] && this.display.B != undefined) { arcs.push({ fillStyle: "#2196f3ff" }); }
-          if (loc.flags[4] && this.display.B2 != undefined) { arcs.push({ fillStyle: "#9c27b0ff" }); }
+          if (loc.flags[0] && this.display.S != undefined) { arcs.push({ fillStyle: `#f44336${opacity}` }); }
+          if (loc.flags[1] && this.display.A != undefined) { arcs.push({ fillStyle: `#ffeb3b${opacity}` }); }
+          if (loc.flags[2] && this.display.A2 != undefined) { arcs.push({ fillStyle: `#8bc34a${opacity}` }); }
+          if (loc.flags[3] && this.display.B != undefined) { arcs.push({ fillStyle: `#2196f3${opacity}` }); }
+          if (loc.flags[4] && this.display.B2 != undefined) { arcs.push({ fillStyle: `#9c27b0${opacity}` }); }
         }
         switch (arcs.length) {
           case 1:
@@ -292,27 +308,29 @@ Vue.component('canvas-component', {
             arcs[4].radEnd = (Math.PI / 2) + (Math.PI * 2 / 5) * 0.0;
             break;
         }
-        ctx.strokeStyle = "#000000ff";
+        ctx.strokeStyle = `#000000${opacity}`;
+        ctx.lineWidth = 0.02
         arcs.forEach(function (v) {
           ctx.beginPath();
           if (arcs.length != 1) {
             ctx.moveTo(0, 0);
           }
           ctx.fillStyle = v.fillStyle
-          ctx.lineWidth = 0.05
           ctx.arc(0, 0, radius, v.radStart, v.radEnd, false);
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
         })
 
-        if (true && arcs.length > 0) {
-          ctx.fillStyle = "#330033";
-          let text = '(' + Math.round(10 * loc.x) / 10 + ', ' + Math.round(10 * loc.y) / 10 + ')';
-          ctx.font = "12px";
+        if (true && arcs.length > 0 && this.scale > 2.0) {
           ctx.save()
-          ctx.scale(1 / 18, 1 / 18)
-          ctx.fillText(text, -30, 24);
+          ctx.translate(0.0, 0.5)
+          ctx.fillStyle = '#000000ff';
+          let text = `(${Math.round(10*loc.x)/10}, ${Math.round(10*loc.y)/10})`
+          ctx.font = '12px sans-serif';
+          ctx.scale(1/(this.scale*scale), 1/(this.scale*scale))
+          ctx.textAlign = 'center';
+          ctx.fillText(text, 0, 13);
           ctx.restore()
         }
 
@@ -320,20 +338,20 @@ Vue.component('canvas-component', {
       })
     },
 
-    drawRebellion(ctx) {
+    drawRebellion(ctx, scale) {
       if (this.zone.mobLocations2) {
+        const opacity = this.scale > 2.0 ? '77' : 'ff'
         this.zone.mobLocations2.forEach(loc => {
           ctx.save();
           ctx.translate(loc.x, loc.y);
-          ctx.strokeStyle = "#000000ff";
-          ctx.lineWidth = 0.1;
-          ctx.fillStyle = "#607d8bff";
-          if (loc.flags[0] && display.SS != undefined) {
+          ctx.strokeStyle = `#000000${opacity}`
+          ctx.lineWidth = 0.02
+          ctx.fillStyle = `#607d8b${opacity}`
+          if (loc.flags[0] && this.display.SS != undefined) {
             this.drawStar(ctx, 0, 0, 6, 0.5, 0.28);
           }
-          else if (loc.flags[1] && display.SS != undefined) {
+          else if (loc.flags[1] && this.display.SS != undefined) {
             ctx.beginPath();
-            ctx.lineWidth = 0.1;
             ctx.moveTo(-0.5, 0);
             ctx.lineTo(0, 0.5);
             ctx.lineTo(0.5, 0);
@@ -343,16 +361,18 @@ Vue.component('canvas-component', {
             ctx.stroke();
           }
 
-          if (true && true) {
-            ctx.fillStyle = "#330033";
-            let text = '(' + Math.round(10 * loc.x) / 10 + ', ' + Math.round(10 * loc.y) / 10 + ')';
-            ctx.font = "12px";
+          if (true && this.scale > 2.0) {
             ctx.save()
-            ctx.scale(1 / 18, 1 / 18)
-            ctx.fillText(text, -30, 24);
+            ctx.translate(0.0, 0.5)
+            ctx.fillStyle = "#000000ff";
+            let text = `(${Math.round(10*loc.x)/10}, ${Math.round(10*loc.y)/10})`
+            ctx.font = '12px sans-serif';
+            ctx.scale(1/(this.scale*scale), 1/(this.scale*scale))
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 0, 13);
             ctx.restore()
           }
-
+  
           ctx.restore();
         })
       }
@@ -365,7 +385,7 @@ Vue.component('canvas-component', {
       var step = Math.PI / spikes;
 
       ctx.beginPath();
-      ctx.lineWidth = 0.1;
+      ctx.lineWidth = 0.02;
       ctx.moveTo(cx, cy - outerRadius)
       for (let i = 0; i < spikes; i++) {
         x = cx + Math.cos(rot) * outerRadius;
@@ -380,16 +400,19 @@ Vue.component('canvas-component', {
       }
       ctx.lineTo(cx, cy - outerRadius);
       ctx.closePath();
-      ctx.lineWidth = 0.1;
       ctx.stroke();
       ctx.fill();
     },
 
     drawCopyRight(ctx) {
+      ctx.save()
+      ctx.translate(this.canvas.width / 2, 0)
+      ctx.fillStyle = "#000000ff";
       const copyright = 'Copyright (C) 2010 - 2020 SQUARE ENIX CO., LTD. All Rights Reserved.'
-      ctx.fillStyle = "#330033";
-      ctx.font = "11px 'ＭＳ Ｐゴシック'";
-      ctx.fillText(copyright, 10.0, this.canvas.height - 10);
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(copyright, 0, this.canvas.height - 12);
+      ctx.restore()
     }
 
   },

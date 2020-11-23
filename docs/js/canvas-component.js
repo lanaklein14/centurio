@@ -4,7 +4,7 @@
 
 
 Vue.component('canvas-component', {
-  props: ['global', 'self', 'mobs', 'zone'],
+  props: ['global', 'self', 'mobs', 'zone', 'reports'],
   data: function () {
     return {
       image: new Image(),
@@ -102,6 +102,8 @@ Vue.component('canvas-component', {
         </div>
     `,
   mounted: function () {
+    const scale = localStorage.getItem('scale')
+    this.scale = (scale <= 8.0 && scale >= 1.0) ? scale : 1.0;
     document.addEventListener("wheel", e => {
       if (e.deltaY < 0) { //e.deltaY == -100
         const newScale = this.scale * 1.1;
@@ -119,128 +121,132 @@ Vue.component('canvas-component', {
     draw() {
       this.canvas.width = document.querySelector("#canvasWrapper").offsetWidth;
       this.canvas.height = this.canvas.width;
-      if (this.zone == null) {
-          if (this.canvas.getContext) {
-            const ctx = this.canvas.getContext('2d');
-            ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            ctx.fillStyle = "rgba(0, 0, 255, 0.5)";
-            ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-          }
-        return
-      }
-      // scaleが1.0の時はマップ全体を描画する
-      // scaleが5.0とかだと大きくなって、自分が中心になる
-      if (this.image.src != `https://xivapi.com/${this.zone.url}`) {
-        this.image.src = `https://xivapi.com/${this.zone.url}`
-      }
-
+      const ctx = this.canvas.getContext('2d');
       if (this.canvas.getContext) {
-        const ctx = this.canvas.getContext('2d');
-
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.fillStyle = "rgba(0, 0, 255, 0.5)";
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
+        if (this.zone == null) {
+          return
+        }
+        if (this.image.src != `https://xivapi.com/${this.zone.url}`) {
+          this.image.src = `https://xivapi.com/${this.zone.url}`
+        }
+        if (this.image.width == 0) {
+          return
+        }
+
+        // scale & transform variables
+        const scalec2a = this.canvas.width / (this.zone.scale.xmax - this.zone.scale.xmin)
+        const scalea2i = (this.zone.scale.xmax - this.zone.scale.xmin) / this.image.width;
+        const prefferedX = (this.zone.scale.xmax - this.zone.scale.xmin) / (2.0 * this.scale)
+        const prefferedY = (this.zone.scale.xmax - this.zone.scale.xmin) / (2.0 * this.scale)
+        const offsetLeft = (-this.zone.scale.xmin + this.self.x)
+        const offsetRight = (this.zone.scale.xmax - this.zone.scale.xmin) / this.scale - (this.zone.scale.xmax - this.self.x)
+        const offsetTop = (-this.zone.scale.ymin + this.self.y)
+        const offsetBottom = (this.zone.scale.xmax - this.zone.scale.xmin) / this.scale - (this.zone.scale.ymax - this.self.y)
+
+
         ctx.save();
-        if (this.image.width > 0) {
-          // Canvas Size -> Area Size
-          const scalec2a = this.canvas.width / (this.zone.scale.xmax - this.zone.scale.xmin)
-          const scalea2i = (this.zone.scale.xmax - this.zone.scale.xmin) / this.image.width;
-          ctx.scale(scalec2a, scalec2a)
 
-          //mid
-          const width = (this.zone.scale.xmax - this.zone.scale.xmin)
-          const height = (this.zone.scale.ymax - this.zone.scale.ymin)
-          const midX = width / 2.0
-          const midY = height / 2.0
+        ctx.scale(scalec2a, scalec2a)
+        ctx.scale(this.scale, this.scale)
 
-          ctx.scale(this.scale, this.scale)
-          //ctx.translate(-midX, -midY)
-          ctx.translate(1.0 - this.self.x, 1.0 - this.self.y)
-          const prefferedX = midX / this.scale
-          const prefferedY = midY / this.scale
-          const offsetLeft = (-this.zone.scale.xmin + this.self.x)
-          const offsetRight = width / this.scale - (this.zone.scale.xmax - this.self.x)
-          const offsetTop = (-this.zone.scale.ymin + this.self.y)
-          const offsetBottom = height / this.scale - (this.zone.scale.ymax - this.self.y)
+        ctx.translate(1.0 - this.self.x, 1.0 - this.self.y)
+        ctx.translate(prefferedX < offsetLeft ? Math.max(prefferedX, offsetRight) : offsetLeft,
+          prefferedY < offsetTop ? Math.max(prefferedY, offsetBottom) : offsetTop)
 
-          this.a = prefferedX
-          this.b = prefferedY
-          this.c = offsetLeft
-          this.d = offsetRight
-          this.e = offsetTop
-          this.f = offsetBottom
+        ctx.save()
+        ctx.scale(scalea2i, scalea2i)
+        ctx.drawImage(this.image, 0, 0)
+        ctx.restore()
 
-          ctx.translate(prefferedX < offsetLeft ? Math.max(prefferedX, offsetRight) : offsetLeft,
-            prefferedY < offsetTop ? Math.max(prefferedY, offsetBottom) : offsetTop)
+        ctx.translate(-this.zone.scale.xmin, -this.zone.scale.ymin)
 
+        //索敵範囲
+        ctx.fillStyle = this.scale > 2.0 ? 'rgba(0, 0, 255, 0.1)' : 'rgba(0, 0, 255, 0.25)';
+        ctx.fillRect(this.self.x - 2.2, this.self.y - 2.2, 4.4, 4.4);
+
+        this.drawMobPos(ctx, scalec2a)
+        this.drawRebellion(ctx, scalec2a)
+
+        this.mobs.forEach(m => {
           ctx.save()
-          ctx.scale(scalea2i, scalea2i)
-          ctx.drawImage(this.image, 0, 0)
-          ctx.restore()
-          ctx.translate(-this.zone.scale.xmin, -this.zone.scale.ymin)
-
-          //索敵範囲
-          ctx.fillStyle = "rgba(0, 0, 255, 0.25)";
-          ctx.fillRect(this.self.x - 2.2, this.self.y - 2.2, 4.4, 4.4);
-
-          this.drawMobPos(ctx, scalec2a)
-          this.drawRebellion(ctx, scalec2a)
-
-
-          this.mobs.forEach(m => {
-            ctx.save()
-            if (this.zone.mobs.find(item => { return item.id == m.id }) != null || 
-                (this.zone.type == 2 && this.zone.mobs2.find(item => { return item.id == m.id }) != null)) {
-              ctx.fillStyle = "rgba(0, 0, 255, 1.0)";
+          if (m.mobIndex >= 0 || m.mob2Index >= 0) {
+            ctx.fillStyle = "rgba(0, 0, 255, 1.0)";
+            ctx.beginPath()
+            ctx.translate(m.x, m.y)
+            ctx.arc(0, 0, 2/scalec2a, 0, Math.PI * 2, 0);
+            ctx.fill();
+            ctx.closePath();
+          }
+          else {
+            ctx.fillStyle = "rgba(255, 0, 0, 1.0)";
+            if (this.scale > 2.0) {
               ctx.beginPath()
               ctx.translate(m.x, m.y)
-              ctx.arc(0, 0, 2/scalec2a, 0, Math.PI * 2, 0);
+              ctx.arc(0, 0, 2/3/scalec2a, 0, Math.PI * 2, 0);
               ctx.fill();
               ctx.closePath();
             }
-            else {
-              ctx.fillStyle = "rgba(255, 0, 0, 1.0)";
-              if (this.scale > 2.0) {
-                ctx.beginPath()
-                ctx.translate(m.x, m.y)
-                ctx.arc(0, 0, 2/3/scalec2a, 0, Math.PI * 2, 0);
-                ctx.fill();
-                ctx.closePath();
-              }
-            }
-            ctx.restore()
-          })
-
-          ctx.save()
-          ctx.translate(this.self.x, this.self.y)
-          ctx.rotate(Math.PI-this.self.heading)
-
-          ctx.beginPath();
-          ctx.fillStyle = "rgba(192, 255, 192, 0.3)";
-          ctx.arc(0, 0, 15/scalec2a, Math.PI + 0.8, -0.8)
-          ctx.lineTo(0, 0);
-          ctx.fill();
-          ctx.closePath();
-
-          ctx.beginPath()
-          ctx.fillStyle = "rgba(150, 150, 255, 1.0)";
-          ctx.strokeStyle = `#000000ff`;
-          ctx.lineWidth = 0.5/(this.scale*scalec2a)
-          ctx.arc(0, 0, 8/(this.scale*scalec2a), 0, Math.PI, 0)
-          ctx.lineTo(0, -15/(this.scale*scalec2a))
-          ctx.lineTo(8/(this.scale*scalec2a), 0)
-          ctx.fill();
-          ctx.stroke();
-          ctx.closePath();
-          ctx.beginPath()
-          ctx.arc(0, 0, 2/(this.scale*scalec2a), 0, 2*Math.PI, 0)
-          ctx.stroke();
-          ctx.closePath();
+          }
           ctx.restore()
+        })
 
-          ctx.restore();
-        }
+        ctx.save()
+
+        ctx.translate(this.self.x, this.self.y)
+        ctx.rotate(Math.PI-this.self.heading)
+
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(192, 255, 192, 0.3)";
+        ctx.arc(0, 0, 15/scalec2a, Math.PI + 0.8, -0.8)
+        ctx.lineTo(0, 0);
+        ctx.fill();
+        ctx.closePath();
+
+        ctx.beginPath()
+        ctx.fillStyle = "rgba(150, 150, 255, 1.0)";
+        ctx.strokeStyle = `#000000ff`;
+        ctx.lineWidth = 0.5/(this.scale*scalec2a)
+        ctx.arc(0, 0, 8/(this.scale*scalec2a), 0, Math.PI, 0)
+        ctx.lineTo(0, -15/(this.scale*scalec2a))
+        ctx.lineTo(8/(this.scale*scalec2a), 0)
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+        ctx.beginPath()
+        ctx.arc(0, 0, 2/(this.scale*scalec2a), 0, 2*Math.PI, 0)
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.restore()
+
+        ctx.restore();
+
+        ctx.save();
+
+        const myscale = scalec2a * this.scale
+        const factorX = 1.0 - this.self.x - this.zone.scale.xmin + 
+            (prefferedX < offsetLeft ? Math.max(prefferedX, offsetRight) : offsetLeft)
+        const factorY = 1.0 - this.self.y - this.zone.scale.ymin + 
+            (prefferedY < offsetTop ? Math.max(prefferedY, offsetBottom) : offsetTop)
+
+        const x = (33.4 + factorX) * myscale     
+        const y = (24.1 + factorY) * myscale     
+
+        //console.log(`${x}, ${y}`)
+
+            ctx.beginPath()
+            ctx.fillStyle = "rgba(150, 150, 255, 1.0)";
+            ctx.strokeStyle = `#000000ff`;
+            ctx.lineWidth = 3
+              ctx.arc(x, y, 3, 0, 2*Math.PI, 0)
+            ctx.stroke();
+
+            ctx.closePath();
+  
         ctx.restore();
 
         this.drawCopyRight(ctx)
@@ -248,7 +254,7 @@ Vue.component('canvas-component', {
     },
 
     drawMobPos(ctx, scale) {
-      this.zone.mobLocations.forEach(loc => {
+      this.zone.mobLocations.forEach((loc, index) => {
         ctx.save();
         ctx.translate(loc.x, loc.y);
         const radius = 0.5
@@ -322,12 +328,62 @@ Vue.component('canvas-component', {
           ctx.stroke();
         })
 
+        const report = this.reports.find(r => {
+          return r.locationIndex == index && 
+            r.worldId == this.global.currentWorldId &&
+            r.zoneId == this.global.zoneId
+        })
+        if (report) {
+          let color = "#ffffffff"
+          let bgColor = "#ffffffff"
+          if (this.zone.type === 0) {
+            if (report.mob.mobIndex == 0) { color = `#ffffffff`; bgColor = `#f44336ff`}
+            if (report.mob.mobIndex == 1) { color = `#000000ff`; bgColor = `#ffeb3bff`}
+            if (report.mob.mobIndex == 2) { color = `#ffffffff`; bgColor = `#2196f3ff`}
+          }
+          else { //type === 1
+            if (report.mob.mobIndex == 0) { color = `#ffffffff`; bgColor = `#f44336ff`}
+            if (report.mob.mobIndex == 1) { color = `#000000ff`; bgColor = `#ffeb3bff`}
+            if (report.mob.mobIndex == 2) { color = `#ffffffff`; bgColor = `#8bc34aff`}
+            if (report.mob.mobIndex == 3) { color = `#ffffffff`; bgColor = `#2196f3ff`}
+            if (report.mob.mobIndex == 4) { color = `#ffffffff`; bgColor = `#9c27b0ff`}
+          }
+          ctx.save()
+          ctx.beginPath();
+          ctx.strokeStyle = `#000000ff`;
+          ctx.lineWidth = 0.2
+          ctx.arc(0, 0, radius-0.06, 0, Math.PI*2, false);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.strokeStyle = bgColor
+          ctx.lineWidth = 0.17
+          ctx.arc(0, 0, radius-0.06, 0, Math.PI*2, false);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.restore()
+
+          ctx.save()
+          ctx.translate(0.0, -1.0)
+          ctx.scale(1/(this.scale*scale), 1/(this.scale*scale))
+          ctx.strokeStyle = `#000000ff`
+          ctx.fillStyle = bgColor
+          ctx.fillRect(-45, -24, 90, 28)
+          ctx.font = '12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = color
+          ctx.fillText(`${report.mob.rank}(${Math.round(10*report.mob.x)/10}, ${Math.round(10*report.mob.y)/10})`, 0, -12, 80);
+          ctx.fillText(`${Math.round(10*report.mob.distance)/10}m(${Math.round(1000*report.mob.hpp)/10}%)`, 0, 0, 80);
+          ctx.restore()
+
+        }
+
         if (true && arcs.length > 0 && this.scale > 2.0) {
           ctx.save()
-          ctx.translate(0.0, 0.5)
           ctx.fillStyle = '#000000ff';
           let text = `(${Math.round(10*loc.x)/10}, ${Math.round(10*loc.y)/10})`
           ctx.font = '12px sans-serif';
+          ctx.translate(0.0, 0.5)
           ctx.scale(1/(this.scale*scale), 1/(this.scale*scale))
           ctx.textAlign = 'center';
           ctx.fillText(text, 0, 13);

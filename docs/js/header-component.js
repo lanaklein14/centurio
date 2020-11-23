@@ -6,6 +6,9 @@ Vue.component('header-component', {
         },
         convertX(x) {
             return Math.floor(x * 100) / 100
+        },
+        posInfo(s) {
+            return `X:${Math.floor(s.x*10)/10} Y:${Math.floor(s.y*10)/10}`
         }
     },
     computed: {
@@ -29,7 +32,7 @@ Vue.component('header-component', {
     },
     template: `
         <div class="header">
-            <h4>{{this.self.name}} in {{this.worldName}} {{$t(this.zoneName)}}{{this.zoneInstance}} </h4>
+            <h4>{{this.self.name}} in {{this.worldName}} {{$t(this.zoneName)}}{{this.zoneInstance}} {{this.self | posInfo()}}</h4>
         </div>
     `
 })

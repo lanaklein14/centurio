@@ -8393,12 +8393,12 @@ const zones = {
         {
           "id": 8915,
           "name": "フォーギヴン・リベリオン",
-          "rank": "S"
+          "rank": "SS"
         },
         {
           "id": 8916,
           "name": "フォーギヴン・ゴシップ",
-          "rank": "S"
+          "rank": "B"
         }
       ],
       "mobLocations2": [
@@ -8678,12 +8678,12 @@ const zones = {
         {
           "id": 8915,
           "name": "フォーギヴン・リベリオン",
-          "rank": "S"
+          "rank": "SS"
         },
         {
           "id": 8916,
           "name": "フォーギヴン・ゴシップ",
-          "rank": "S"
+          "rank": "B"
         }
       ],
       "mobLocations2": [
@@ -8975,12 +8975,12 @@ const zones = {
         {
           "id": 8915,
           "name": "フォーギヴン・リベリオン",
-          "rank": "S"
+          "rank": "SS"
         },
         {
           "id": 8916,
           "name": "フォーギヴン・ゴシップ",
-          "rank": "S"
+          "rank": "B"
         }
       ],
       "mobLocations2": [
@@ -9261,12 +9261,12 @@ const zones = {
         {
           "id": 8915,
           "name": "フォーギヴン・リベリオン",
-          "rank": "S"
+          "rank": "SS"
         },
         {
           "id": 8916,
           "name": "フォーギヴン・ゴシップ",
-          "rank": "S"
+          "rank": "B"
         }
       ],
       "mobLocations2": [
@@ -9524,12 +9524,12 @@ const zones = {
         {
           "id": 8915,
           "name": "フォーギヴン・リベリオン",
-          "rank": "S"
+          "rank": "SS"
         },
         {
           "id": 8916,
           "name": "フォーギヴン・ゴシップ",
-          "rank": "S"
+          "rank": "B"
         }
       ],
       "mobLocations2": [
@@ -9809,12 +9809,12 @@ const zones = {
         {
           "id": 8915,
           "name": "フォーギヴン・リベリオン",
-          "rank": "S"
+          "rank": "SS"
         },
         {
           "id": 8916,
           "name": "フォーギヴン・ゴシップ",
-          "rank": "S"
+          "rank": "B"
         }
       ],
       "mobLocations2": [

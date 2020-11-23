@@ -1,39 +1,44 @@
 Vue.component('footer-component', {
-    props: ['global'],
+    props: ['global', 'reports', 'self'],
     filters: {
-        name(id) {
-            return `mob.${id}`
+        formatTime(dateTime) {
+            return dateTime ? moment(dateTime).format('HH:mm:ss') : '-'
         }
     },
     methods: {
         
     },
     computed: {
-        mobs() {
-            const zone = zones[this.global.zoneId]
-            return zone ? zone.mobs.map(m=>`mob.${m.id}`) : null
-        },
-        worldName() {
-            let name = ''
-            Object.values(datacenters).forEach(worlds => {
-                const a = worlds.find(w => w.id == this.global.currentWorldId)
-                if (a) {
-                    name = a.name
-                }
-            })
-            return name
-        },
-        zoneName() {
-            const zone = zones[this.global.zoneId]
-            return zone ? `zone.${this.global.zoneId}` : ''
-        },
-        zoneInstance() {
-            return (this.global.zoneInstance > 0) ? `(ins${this.global.zoneInstance})` : ''
-        }
     },
     template: `
         <div class="footer">
-            <h4 v-for="mob in this.mobs">{{$t(mob)}}</h4>
+            <table border="1">
+                <tr>
+                <th>name</th>
+                <th>x</th>
+                <th>y</th>
+                <th>hpp</th>
+                <th>lastUpdate</th>
+                <th>tod</th>
+                <th>locIndex</th>
+                <th>worldId</th>
+                <th>zoneId</th>
+                <th>distanceZ</th>
+                </tr>
+                <tr v-for="(report, index) in this.reports">
+                <td>{{report.mob.name}}</td>
+                <td>{{Math.floor(report.mob.x*10)/10}}</td>
+                <td>{{Math.floor(report.mob.y*10)/10}}</td>
+                <td>{{Math.floor(report.mob.hpp*1000)/10}}%</td>
+                <td>{{report.lastUpdate | formatTime}}</td>
+                <td>{{report.tod | formatTime}}</td>
+                <td>{{report.locationIndex}}</td>
+                <td>{{report.worldId}}</td>
+                <td>{{report.zoneId}}</td>
+                <td>{{Math.floor(report.mob.distanceZ*10)/10}}</td>
+                </tr>
+            </table>    
+            <h4>{{global.countPcs}}</h4>
         </div>
     `
 })
